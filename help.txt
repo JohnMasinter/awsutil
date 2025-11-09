@@ -1,0 +1,20 @@
+# copy tags from one aws instance to another
+
+# step 1, fetch all tags from source instance
+SIID="i-xxxxxxxxxxxxxxxxx" # source instance ID
+aws ec2 describe-instances --instance-ids $SIID --query 'Reservations[0].Instances[0].Tags' --output json ›mytags.json
+
+# step 2, edit json file to add/remove tags and modify values as needed.
+# always remove "Name" tag/value, otherwise dest instance is renamed same as source instance.
+vim mytags.json
+
+# step 3, write tags to one or more destination instance(s)
+DIID="i-xxxxxxxxxxxxxxxxx" # one destination instance ID
+DIID="i-xxxxxxxxxxxxxxxxx i-xxxxxxxxxxxxxxxxx i-xxxxxxxxxxxxxxxxx" # or many
+aws ec2 create-tags --resources $DIID --tags "$(cat mytags.json)"
+# do not quote $DIID so multiple instances are read as multiple arguments
+# but do quote the cat, so json file is read as one string argument.
+
+# print only tag/val from instance
+cat t.json | jq -c'.Reservations[].Instances[].Tags[]'
+
